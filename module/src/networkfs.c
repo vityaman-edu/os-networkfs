@@ -33,10 +33,18 @@ struct inode* nfs_get_inode(
 
 void nfs_kill_sb(struct super_block* sb);
 
+struct dentry* nfs_lookup(
+    struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
+);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
     .kill_sb = nfs_kill_sb,
+};
+
+struct inode_operations nfs_inode_ops = {
+    .lookup = nfs_lookup,
 };
 
 struct dentry* nfs_mount(
@@ -75,6 +83,12 @@ struct inode* nfs_get_inode(
 
 void nfs_kill_sb(struct super_block* sb) {
   log_info("Super block is destroyed. Unmounted successfully.");
+}
+
+struct dentry* nfs_lookup(
+    struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
+) {
+  return NULL;
 }
 
 static int __init nfs_init(void) {
