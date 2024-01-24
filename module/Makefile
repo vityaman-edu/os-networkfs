@@ -1,4 +1,5 @@
-obj-m += src/networkfs.o 
+obj-m += src/linufs.o
+obj-m += src/networkfs.o
 ccflags-y := -std=gnu11 -g -Wall -Wno-declaration-after-statement
 
 PWD := $(CURDIR)
