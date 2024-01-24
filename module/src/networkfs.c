@@ -12,10 +12,10 @@ MODULE_DESCRIPTION("A simple Network File System");
 MODULE_VERSION("0.0.1");
 
 #define log_info(fmt, ...) pr_info("[" MODULE_NAME "]: " fmt, ##__VA_ARGS__)
-
 #define log_error(fmt, ...) pr_err("[" MODULE_NAME "]: " fmt, ##__VA_ARGS__)
 
-#define NETWORKFS_ROOT_INODE 1000
+#define NETWORKFS_ROOT_INODE 1000 // TODO: add NUMBER to name
+#define NETWORKFS_FILENAME_LENGTH 32
 
 static int __init nfs_init(void);
 
@@ -33,10 +33,24 @@ struct inode* nfs_get_inode(
 
 void nfs_kill_sb(struct super_block* sb);
 
+struct dentry* nfs_lookup(
+    struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
+);
+
+int nfs_iterate(struct file* filp, struct dir_context* ctx);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
     .kill_sb = nfs_kill_sb,
+};
+
+struct inode_operations nfs_inode_ops = {
+    .lookup = nfs_lookup,
+};
+
+struct file_operations nfs_dir_ops = {
+    .iterate = nfs_iterate,
 };
 
 struct dentry* nfs_mount(
@@ -54,11 +68,14 @@ struct dentry* nfs_mount(
 int nfs_fill_super(struct super_block* sb, void* data, int silent) {
   struct inode* inode
       = nfs_get_inode(sb, /*dir=*/NULL, S_IFDIR, NETWORKFS_ROOT_INODE);
+
   sb->s_root = d_make_root(inode);
   if (sb->s_root == NULL) {
+    log_error("fill_super returned NO MEMORY");
     return -ENOMEM;
   }
-  log_info("fill_super returns 0");
+
+  log_info("fill_super returns OK");
   return 0;
 }
 
@@ -66,15 +83,92 @@ struct inode* nfs_get_inode(
     struct super_block* sb, const struct inode* dir, umode_t mode, int i_ino
 ) {
   struct inode* inode = new_inode(sb);
-  inode->i_ino = i_ino;
-  if (inode != NULL) {
-    inode_init_owner(&init_user_ns, inode, dir, mode);
+  if (inode == NULL) {
+    log_error("get inode returned null");
+    return NULL;
   }
+
+  inode->i_ino = i_ino;
+  inode->i_op = &nfs_inode_ops;
+  inode->i_fop = &nfs_dir_ops;
+
+  inode_init_owner(&init_user_ns, inode, dir, mode | S_IRWXUGO);
+
+  log_info("get inode with number %lu", inode->i_ino);
   return inode;
 }
 
 void nfs_kill_sb(struct super_block* sb) {
   log_info("Super block is destroyed. Unmounted successfully.");
+}
+
+struct dentry* nfs_lookup(
+    struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
+) {
+  log_info(
+      "Lookup at inode %lu for a %s",
+      parent_inode->i_ino,
+      child_dentry->d_name.name
+  );
+
+  struct inode* inode = nfs_get_inode(
+      parent_inode->i_sb,
+      /*dir=*/NULL,
+      /*mode=*/S_IFDIR,
+      /*i_ino=*/NETWORKFS_ROOT_INODE
+  );
+
+  d_add(child_dentry, inode);
+
+  return NULL;
+}
+
+typedef enum {
+  DIRECTORY = DT_DIR,
+  REGULAR_FILE = DT_REG,
+} FileType;
+
+typedef unsigned long INodeNumber;
+
+typedef struct {
+  const char* name;
+  INodeNumber inode_number;
+  FileType type;
+} DirectoryEntry;
+
+int nfs_iterate(struct file* filp, struct dir_context* ctx) {
+  log_info("iteratation started");
+
+  struct dentry* dentry = filp->f_path.dentry;
+
+  const long long offset = filp->f_pos;
+
+  const DirectoryEntry entries[] = {
+      {.name = ".",         dentry->d_inode->i_ino,           DIRECTORY   },
+      {.name = "..",        dentry->d_parent->d_inode->i_ino, DIRECTORY   },
+      {.name = "test.text", NETWORKFS_ROOT_INODE + 1,         REGULAR_FILE}
+  };
+
+  const long long count = sizeof(entries) / sizeof(DirectoryEntry);
+
+  for (long long i = offset; i < count; ++i) {
+    const DirectoryEntry* entry = &entries[i];
+    log_info("emit entry[%lld] is %s", i, entry->name);
+    const bool is_ok = dir_emit(
+        ctx,
+        entry->name, //
+        strlen(entry->name),
+        entry->inode_number,
+        entry->type
+    );
+    if (!is_ok) {
+      log_error("dir emit failed");
+    }
+    ctx->pos += 1;
+  }
+
+  log_error("iterate count is %lld", ctx->pos - filp->f_pos);
+  return (int)(ctx->pos - filp->f_pos);
 }
 
 static int __init nfs_init(void) {
