@@ -12,10 +12,10 @@ MODULE_DESCRIPTION("A simple Network File System");
 MODULE_VERSION("0.0.1");
 
 #define log_info(fmt, ...) pr_info("[" MODULE_NAME "]: " fmt, ##__VA_ARGS__)
-
 #define log_error(fmt, ...) pr_err("[" MODULE_NAME "]: " fmt, ##__VA_ARGS__)
 
-#define NETWORKFS_ROOT_INODE 1000
+#define NETWORKFS_ROOT_INODE 1000 // TODO: add NUMBER to name
+#define NETWORKFS_FILENAME_LENGTH 32
 
 static int __init nfs_init(void);
 
@@ -37,6 +37,8 @@ struct dentry* nfs_lookup(
     struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
 );
 
+int nfs_iterate(struct file* filp, struct dir_context* ctx);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
@@ -45,6 +47,10 @@ struct file_system_type nfs_fs_type = {
 
 struct inode_operations nfs_inode_ops = {
     .lookup = nfs_lookup,
+};
+
+struct file_operations networkfs_dir_ops = {
+    .iterate = nfs_iterate,
 };
 
 struct dentry* nfs_mount(
@@ -66,7 +72,7 @@ int nfs_fill_super(struct super_block* sb, void* data, int silent) {
   if (sb->s_root == NULL) {
     return -ENOMEM;
   }
-  log_info("fill_super returns 0");
+  log_info("fill_super returns OK");
   return 0;
 }
 
@@ -107,6 +113,47 @@ struct dentry* nfs_lookup(
   d_add(child_dentry, inode);
 
   return NULL;
+}
+
+typedef enum {
+  DIRECTORY = DT_DIR,
+  REGULAR_FILE = DT_REG,
+} FileType;
+
+typedef unsigned long INodeNumber;
+
+typedef struct {
+  const char* name;
+  INodeNumber inode_number;
+  FileType type;
+} DirectoryEntry;
+
+int nfs_iterate(struct file* filp, struct dir_context* ctx) {
+  struct dentry* dentry = filp->f_path.dentry;
+
+  const long long offset = filp->f_pos;
+
+  const DirectoryEntry entries[] = {
+      {.name = ".",         dentry->d_inode->i_ino,           DIRECTORY   },
+      {.name = "..",        dentry->d_parent->d_inode->i_ino, DIRECTORY   },
+      {.name = "test.text", NETWORKFS_ROOT_INODE + 1,         REGULAR_FILE}
+  };
+
+  const long long count = sizeof(entries) / sizeof(DirectoryEntry);
+
+  for (long long i = offset; i < count; ++i) {
+    const DirectoryEntry* entry = &entries[i];
+    dir_emit(
+        ctx,
+        entry->name, //
+        strlen(entry->name),
+        entry->inode_number,
+        entry->type
+    );
+    ctx->pos += 1;
+  }
+
+  return (int)(ctx->pos - filp->f_pos);
 }
 
 static int __init nfs_init(void) {
