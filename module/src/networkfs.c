@@ -1,5 +1,6 @@
 #include <linux/fs.h>
 #include <linux/init.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/printk.h>
 
@@ -8,6 +9,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("vityaman");
 MODULE_DESCRIPTION("A simple Network File System");
+MODULE_VERSION("0.0.1");
 
 #define log_info(fmt, ...) pr_info("[" MODULE_NAME "]: " fmt, ##__VA_ARGS__)
 
@@ -61,7 +63,7 @@ struct inode* nfs_get_inode(
   struct inode* inode = new_inode(sb);
   inode->i_ino = i_ino;
   if (inode != NULL) {
-    inode_init_owner(inode, dir, mode);
+    inode_init_owner(&init_user_ns, inode, dir, mode);
   }
   return inode;
 }
