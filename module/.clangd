@@ -1,0 +1,25 @@
+CompileFlags:
+  Add: [-Wall]
+  Compiler: gcc-12
+
+Diagnostics:
+  UnusedIncludes: Strict
+  ClangTidy:
+    Add: "*"
+    Remove:
+      [
+        android-cloexec-pipe,
+        concurrency-mt-unsafe,
+        bugprone-easily-swappable-parameters,
+        altera-struct-pack-align,
+        altera-id-dependent-backward-branch,
+        altera-unroll-loops,
+        llvmlibc-restrict-system-libc-headers,
+        cppcoreguidelines-avoid-non-const-global-variables,
+        
+      ]
+
+InlayHints:
+  Designators: No
+  Enabled: No
+  DeducedTypes: No

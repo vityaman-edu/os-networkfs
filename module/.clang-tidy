@@ -1,0 +1,8 @@
+---
+Checks: "*"
+WarningsAsErrors: "*"
+HeaderFilterRegex: ".*"
+AnalyzeTemporaryDtors: false
+FormatStyle: .clang-format
+UseColor: true
+---
