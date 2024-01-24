@@ -1,8 +1,8 @@
 obj-m += src/networkfs.o 
+ccflags-y := -std=gnu11 -g -Wall -Wno-declaration-after-statement
 
-PWD := $(CURDIR) 
+PWD := $(CURDIR)
 KDIR = /lib/modules/`uname -r`/build
-EXTRA_CFLAGS = -Wall -g -std=gnu11
 
 all:
 	make -C $(KDIR) M=$(PWD) modules 

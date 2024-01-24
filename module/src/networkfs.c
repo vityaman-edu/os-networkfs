@@ -49,7 +49,7 @@ struct inode_operations nfs_inode_ops = {
     .lookup = nfs_lookup,
 };
 
-struct file_operations networkfs_dir_ops = {
+struct file_operations nfs_dir_ops = {
     .iterate = nfs_iterate,
 };
 
@@ -68,10 +68,13 @@ struct dentry* nfs_mount(
 int nfs_fill_super(struct super_block* sb, void* data, int silent) {
   struct inode* inode
       = nfs_get_inode(sb, /*dir=*/NULL, S_IFDIR, NETWORKFS_ROOT_INODE);
+
   sb->s_root = d_make_root(inode);
   if (sb->s_root == NULL) {
+    log_error("fill_super returned NO MEMORY");
     return -ENOMEM;
   }
+
   log_info("fill_super returns OK");
   return 0;
 }
@@ -81,12 +84,17 @@ struct inode* nfs_get_inode(
 ) {
   struct inode* inode = new_inode(sb);
   if (inode == NULL) {
+    log_error("get inode returned null");
     return NULL;
   }
 
   inode->i_ino = i_ino;
   inode->i_op = &nfs_inode_ops;
+  inode->i_fop = &nfs_dir_ops;
+
   inode_init_owner(&init_user_ns, inode, dir, mode | S_IRWXUGO);
+
+  log_info("get inode with number %lu", inode->i_ino);
   return inode;
 }
 
@@ -129,6 +137,8 @@ typedef struct {
 } DirectoryEntry;
 
 int nfs_iterate(struct file* filp, struct dir_context* ctx) {
+  log_info("iteratation started");
+
   struct dentry* dentry = filp->f_path.dentry;
 
   const long long offset = filp->f_pos;
@@ -143,16 +153,21 @@ int nfs_iterate(struct file* filp, struct dir_context* ctx) {
 
   for (long long i = offset; i < count; ++i) {
     const DirectoryEntry* entry = &entries[i];
-    dir_emit(
+    log_info("emit entry[%lu] is %s", i, entry->name);
+    const bool is_ok = dir_emit(
         ctx,
         entry->name, //
         strlen(entry->name),
         entry->inode_number,
         entry->type
     );
+    if (!is_ok) {
+      log_error("dir emit failed");
+    }
     ctx->pos += 1;
   }
 
+  log_error("iterate count is %lld", ctx->pos - filp->f_pos);
   return (int)(ctx->pos - filp->f_pos);
 }
 
