@@ -1,4 +1,4 @@
-obj-m += src/hello.o 
+obj-m += src/networkfs.o 
 
 PWD := $(CURDIR) 
 KDIR = /lib/modules/`uname -r`/build
