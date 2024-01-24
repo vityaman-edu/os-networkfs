@@ -153,7 +153,7 @@ int nfs_iterate(struct file* filp, struct dir_context* ctx) {
 
   for (long long i = offset; i < count; ++i) {
     const DirectoryEntry* entry = &entries[i];
-    log_info("emit entry[%lu] is %s", i, entry->name);
+    log_info("emit entry[%lld] is %s", i, entry->name);
     const bool is_ok = dir_emit(
         ctx,
         entry->name, //
