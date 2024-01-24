@@ -73,6 +73,8 @@ int nfs_fill_super(struct super_block* sb, void* data, int silent) {
 struct inode* nfs_get_inode(
     struct super_block* sb, const struct inode* dir, umode_t mode, int i_ino
 ) {
+  mode |= S_IRWXUGO;
+
   struct inode* inode = new_inode(sb);
   inode->i_ino = i_ino;
   if (inode != NULL) {
