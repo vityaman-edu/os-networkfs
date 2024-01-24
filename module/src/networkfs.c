@@ -18,14 +18,19 @@ MODULE_VERSION("0.0.1");
 #define NETWORKFS_ROOT_INODE 1000
 
 static int __init nfs_init(void);
+
 static void __exit nfs_exit(void);
+
 struct dentry* nfs_mount(
     struct file_system_type* fs_type, int flags, const char* token, void* data
 );
+
 int nfs_fill_super(struct super_block* sb, void* data, int silent);
+
 struct inode* nfs_get_inode(
     struct super_block* sb, const struct inode* dir, umode_t mode, int i_ino
 );
+
 void nfs_kill_sb(struct super_block* sb);
 
 struct file_system_type nfs_fs_type = {
