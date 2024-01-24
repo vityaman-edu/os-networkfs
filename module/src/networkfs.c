@@ -26,7 +26,7 @@ struct inode* nfs_get_inode(
 );
 void nfs_kill_sb(struct super_block* sb);
 
-struct file_system_type networkfs_fs_type = {
+struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
     .kill_sb = nfs_kill_sb,
@@ -71,12 +71,22 @@ void nfs_kill_sb(struct super_block* sb) {
 }
 
 static int __init nfs_init(void) {
-  log_info("Initialized!");
+  const int code = register_filesystem(&nfs_fs_type);
+  if (code != 0) {
+    log_error("Registration failed with code %d", code);
+    return code;
+  }
+  log_info("Registered the filesystem successfully!");
   return 0;
 }
 
 static void __exit nfs_exit(void) {
-  log_info("Exit.");
+  const int code = unregister_filesystem(&nfs_fs_type);
+  if (code != 0) {
+    log_error("Unregistration failed with code %d", code);
+    return;
+  }
+  log_info("Unregistered the filesystem successfully");
 }
 
 module_init(nfs_init);
