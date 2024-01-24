@@ -91,6 +91,21 @@ void nfs_kill_sb(struct super_block* sb) {
 struct dentry* nfs_lookup(
     struct inode* parent_inode, struct dentry* child_dentry, unsigned int flag
 ) {
+  log_info(
+      "Lookup at inode %lu for a %s",
+      parent_inode->i_ino,
+      child_dentry->d_name.name
+  );
+
+  struct inode* inode = nfs_get_inode(
+      parent_inode->i_sb,
+      /*dir=*/NULL,
+      /*mode=*/S_IFDIR,
+      /*i_ino=*/NETWORKFS_ROOT_INODE
+  );
+
+  d_add(child_dentry, inode);
+
   return NULL;
 }
 
