@@ -216,12 +216,94 @@ void linufs_inodes_free(INodes entries) {
 /// Reads `len` bytes from file with number `inode` at `offset`.
 ssize_t
 linufs_read(INodeNumber inode, char* user_buffer, size_t len, loff_t* offset) {
-  return 0;
+  printk(KERN_INFO "Read %d offset %llu\n", inode, *offset);
+
+  char inode_str[11];
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", inode);
+
+  int64_t code;
+  struct read_response response;
+  if ((code = networkfs_http_call(
+           "admin",
+           "read",
+           (void*)&response,
+           sizeof(response),
+           1,
+           "inode",
+           inode_str
+       ))
+      != 0) {
+    printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+    return -1;
+  }
+
+  if (*offset >= response.size) {
+    return 0;
+  }
+
+  printk(KERN_INFO "Read content with size %d\n", response.size);
+
+  size_t rest = min(len, (size_t)(response.size - *offset));
+
+  int uncopied = copy_to_user(user_buffer, response.content, rest);
+  if (uncopied != 0) {
+    printk(
+        KERN_INFO "copy_to_user return %d when size was %lu\n", uncopied, rest
+    );
+  }
+
+  *offset += rest - uncopied;
+  return (rest - uncopied);
 }
 
 /// Write `len` bytes to file with number `inode` at `offset`.
 ssize_t linufs_write(
     INodeNumber inode, const char* user_buffer, size_t len, loff_t* offset
 ) {
-  return 0;
+  printk(KERN_INFO "Write %d offset %llu\n", inode, *offset);
+
+  if (*offset >= 1024) {
+    return 0;
+  }
+  len = min(len, (size_t)1023);
+
+  char content[1024];
+  int uncopied;
+  uncopied = copy_from_user(content, user_buffer, len);
+  if (uncopied != 0) {
+    printk(
+        KERN_INFO "copy_to_user return %d when size was %lu\n", uncopied, len
+    );
+    return 0;
+  }
+  content[len] = '\0';
+
+  char inode_str[11];
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", inode);
+
+  char content_enc[1023 * 3 + 1];
+  encode(content, content_enc);
+
+  int64_t code;
+  struct write_response response;
+  if ((code = networkfs_http_call(
+           "admin",
+           "write",
+           (void*)&response,
+           sizeof(response),
+           2,
+           "inode",
+           inode_str,
+           "content",
+           content_enc
+       ))
+      != 0) {
+    printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+    return -1;
+  }
+
+  printk(KERN_INFO "Wrote\n");
+
+  *offset += len;
+  return len;
 }
