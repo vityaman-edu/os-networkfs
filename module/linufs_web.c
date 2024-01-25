@@ -8,9 +8,6 @@
 #define LINUFS_INODE_NUMBER_MIN 111
 #define LINUFS_INODE_NUMBER_MAX 2000
 
-static INodeNumber linufs_inode_number_next = LINUFS_INODE_NUMBER_MIN;
-static INode linufs_inodes[LINUFS_INODE_NUMBER_MAX + 1] = {0};
-
 void string_initialize(String* this, size_t capacity) {
   this->length = 0;
   this->capacity = capacity;
