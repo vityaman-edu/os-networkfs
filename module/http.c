@@ -1,6 +1,6 @@
 #include "http.h"
 
-const char* SERVER_IP = "192.168.0.104";
+const char* SERVER_IP = "0.0.0.0";
 const int SERVER_PORT = 8080;
 
 // callee should call free_request on received buffer

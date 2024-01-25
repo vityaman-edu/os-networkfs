@@ -80,6 +80,7 @@ struct file_operations nfs_dir_ops = {
 struct dentry* nfs_mount(
     struct file_system_type* fs_type, int flags, const char* token, void* data
 ) {
+  linufs_initialize(token);
   struct dentry* dir = mount_nodev(fs_type, flags, data, nfs_fill_super);
   if (dir == NULL) {
     log_error("Can't mount file system");

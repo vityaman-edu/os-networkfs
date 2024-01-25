@@ -43,7 +43,7 @@ typedef enum {
 } Status;
 
 /// Initializes LinuFS.
-void linufs_initialize(void);
+void linufs_initialize(const char* token);
 
 INodeNumber linufs_inode_number_root(void);
 

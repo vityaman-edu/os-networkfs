@@ -3,9 +3,9 @@
 #include "log.h"
 #include <linux/slab.h>
 
-#define LINUFS_INODE_NUMBER_ROOT 1000
+#define LINUFS_INODE_NUMBER_ROOT 100
 #define LINUFS_INODE_NUMBER_INVALID 0
-#define LINUFS_INODE_NUMBER_MIN 1111
+#define LINUFS_INODE_NUMBER_MIN 111
 #define LINUFS_INODE_NUMBER_MAX 2000
 
 static INodeNumber linufs_inode_number_next = LINUFS_INODE_NUMBER_MIN;
@@ -51,7 +51,10 @@ struct __attribute__((__packed__)) read_response {
 
 struct __attribute__((__packed__)) write_response {};
 
-void linufs_initialize(void) {
+static char token_[36];
+
+void linufs_initialize(const char* token) {
+  strcpy(token_, token);
   log_info("linufs web: initializing...");
   // Do nothing
   // linufs_create(linufs_inode_number_root(), "test.txt", REGULAR_FILE);
@@ -77,7 +80,7 @@ linufs_create(INodeNumber parent, const char* name, INodeType type) {
 
   struct create_response response;
   int64_t code = networkfs_http_call(
-      "admin",
+      token_,
       "create",
       (void*)&response,
       sizeof(response),
@@ -107,7 +110,7 @@ Status linufs_remove(INodeNumber directory, const char* name) {
 
   struct remove_response response;
   int64_t code = networkfs_http_call(
-      "admin",
+      token_,
       "remove",
       (void*)&response,
       sizeof(response),
@@ -145,7 +148,7 @@ INode* linufs_lookup(INodeNumber directory, const char* name) {
 
   struct lookup_response response;
   int64_t code = networkfs_http_call(
-      "admin",
+      token_,
       "lookup",
       (void*)&response,
       sizeof(response),
@@ -173,7 +176,7 @@ INodes linufs_list(INodeNumber directory) {
 
   struct list_response response;
   int64_t code = networkfs_http_call(
-      "admin", //
+      token_, //
       "list",
       (void*)&response,
       sizeof(response),
