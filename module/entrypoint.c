@@ -137,7 +137,7 @@ struct dentry* nfs_lookup(
 
   INode* linode = linufs_lookup((INodeNumber)parent, name);
   if (linode == NULL) {
-    log_error("Not found inode with name %s at parent %lu", name, parent);
+    // log_error("Not found inode with name %s at parent %lu", name, parent);
     return NULL;
   }
 
