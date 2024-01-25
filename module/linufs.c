@@ -165,7 +165,7 @@ linufs_read(INodeNumber inode, char* user_buffer, size_t len, loff_t* offset) {
     return 0;
   }
 
-  const loff_t remaining = min(len, linode->content.length - *offset);
+  const loff_t remaining = min(len, linode->content.length - (size_t)*offset);
   const loff_t uncopied = (loff_t
   )copy_to_user(user_buffer, linode->content.chars + *offset, remaining);
   if (uncopied != 0) {
@@ -199,7 +199,7 @@ ssize_t linufs_write(
     return 0;
   }
 
-  const loff_t remaining = min(len, linode->content.capacity - *offset);
+  const loff_t remaining = min(len, linode->content.capacity - (size_t)*offset);
   const loff_t uncopied = (loff_t
   )copy_from_user((linode->content.chars + *offset), user_buffer, remaining);
   if (uncopied != 0) {
