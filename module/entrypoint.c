@@ -1,5 +1,6 @@
 #include "linufs.h"
 #include "log.h"
+#include "src/log.h"
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -59,7 +60,9 @@ struct file_system_type nfs_fs_type = {
 struct inode_operations nfs_inode_ops = {
     .lookup = nfs_lookup,
     .create = nfs_create_file,
+    .unlink = networkfs_remove,
     .mkdir = nfs_create_directory,
+    .rmdir = networkfs_remove,
 };
 
 struct file_operations nfs_dir_ops = {
@@ -233,6 +236,29 @@ int nfs_create_directory(
     umode_t mode
 ) {
   return nfs_create(parent_inode, child_dentry, DT_DIR);
+}
+
+static int
+networkfs_remove(struct inode* parent_inode, struct dentry* child_dentry) {
+  const INodeNumber directory = (int)parent_inode->i_ino;
+  const char* name = child_dentry->d_name.name;
+
+  log_info("Removing inode with name %s in %d", name, directory);
+
+  INode* inode = linufs_lookup(directory, name);
+  if (inode == NULL) {
+    log_error("INode not found");
+    return -1;
+  }
+
+  const Status status = linufs_remove(inode->number);
+  if (status != OK) {
+    log_error("Removal failed");
+    return -1;
+  }
+
+  log_info("Removed");
+  return 0;
 }
 
 static int __init nfs_init(void) {

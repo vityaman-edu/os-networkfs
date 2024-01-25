@@ -22,6 +22,12 @@ typedef struct {
   INode** items;
 } INodes;
 
+typedef enum {
+  OK = 0,
+  UNKNOWN = 1,
+  NOT_FOUND = 2,
+} Status;
+
 /// Initializes LinuFS.
 void linufs_initialize(void);
 
@@ -29,6 +35,9 @@ INodeNumber linufs_inode_number_root(void);
 
 /// Creates an inode and returns its number.
 INodeNumber linufs_create(INodeNumber parent, const char* name, INodeType type);
+
+/// Removes an inode.
+Status linufs_remove(INodeNumber inode_number);
 
 /// Tries to find an inode with th given name in the directory.
 INode* linufs_lookup(INodeNumber directory, const char* name);

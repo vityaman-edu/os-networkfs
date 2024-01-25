@@ -52,6 +52,22 @@ linufs_create(INodeNumber parent, const char* name, INodeType type) {
   return linufs_inode_number_next++;
 }
 
+Status linufs_remove(INodeNumber inode_number) {
+  INode* inode = linufs_find(inode_number);
+  if (inode == NULL) {
+    return NOT_FOUND;
+  }
+
+  // TODO: memory leak, do recursive removal
+
+  inode->name = NULL;
+  inode->number = LINUFS_INODE_NUMBER_INVALID;
+  inode->parent = LINUFS_INODE_NUMBER_INVALID;
+  inode->type = 0;
+
+  return OK;
+}
+
 INode* linufs_lookup(INodeNumber directory, const char* name) {
   log_info("linufs: looking up...");
   const INodeNumber min = LINUFS_INODE_NUMBER_MIN;
