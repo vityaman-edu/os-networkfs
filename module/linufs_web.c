@@ -80,7 +80,7 @@ linufs_create(INodeNumber parent, const char* name, INodeType type) {
 
   struct create_response response;
   int64_t code = networkfs_http_call(
-      token_,
+      "admin",
       "create",
       (void*)&response,
       sizeof(response),
@@ -110,7 +110,7 @@ Status linufs_remove(INodeNumber directory, const char* name) {
 
   struct remove_response response;
   int64_t code = networkfs_http_call(
-      token_,
+      "admin",
       "remove",
       (void*)&response,
       sizeof(response),
@@ -148,7 +148,7 @@ INode* linufs_lookup(INodeNumber directory, const char* name) {
 
   struct lookup_response response;
   int64_t code = networkfs_http_call(
-      token_,
+      "admin",
       "lookup",
       (void*)&response,
       sizeof(response),
@@ -176,7 +176,7 @@ INodes linufs_list(INodeNumber directory) {
 
   struct list_response response;
   int64_t code = networkfs_http_call(
-      token_, //
+      "admin", //
       "list",
       (void*)&response,
       sizeof(response),
