@@ -70,13 +70,13 @@ INodeNumber linufs_inode_number_root(void) {
 INodeNumber
 linufs_create(INodeNumber parent, const char* name, INodeType type) {
   char inode_str[11];
-  snprintf(inode_str, sizeof(inode_str), "%lu", parent);
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", parent);
 
   char name_enc[255 * 3 + 1];
   encode(name, name_enc);
 
   char type_str[2];
-  snprintf(type_str, sizeof(type_str), "%d", (int)type);
+  (void)snprintf(type_str, sizeof(type_str), "%d", (int)type);
 
   struct create_response response;
   int64_t code = networkfs_http_call(
@@ -103,7 +103,7 @@ linufs_create(INodeNumber parent, const char* name, INodeType type) {
 /// Removes an inode.
 Status linufs_remove(INodeNumber directory, const char* name) {
   char inode_str[11];
-  snprintf(inode_str, sizeof(inode_str), "%lu", directory);
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", directory);
 
   char name_enc[255 * 3 + 1];
   encode(name, name_enc);
@@ -141,7 +141,7 @@ static void linufs_memory_free(void* ptr) {
 /// Tries to find an inode with th given name in the directory.
 INode* linufs_lookup(INodeNumber directory, const char* name) {
   char inode_str[11];
-  snprintf(inode_str, sizeof(inode_str), "%lu", directory);
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", directory);
 
   char name_enc[255 * 3 + 1];
   encode(name, name_enc);
@@ -172,7 +172,7 @@ INode* linufs_lookup(INodeNumber directory, const char* name) {
 /// Returns an array of the directory entries.
 INodes linufs_list(INodeNumber directory) {
   char inode_str[11];
-  snprintf(inode_str, sizeof(inode_str), "%lu", directory);
+  (void)snprintf(inode_str, sizeof(inode_str), "%d", directory);
 
   struct list_response response;
   int64_t code = networkfs_http_call(
