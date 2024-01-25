@@ -286,7 +286,6 @@ static int __init nfs_init(void) {
     log_error("Registration failed with code %d", code);
     return code;
   }
-  linufs_initialize();
   log_info("Registered the filesystem successfully!");
   return 0;
 }
