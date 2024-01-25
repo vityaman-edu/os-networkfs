@@ -1,0 +1,6 @@
+#ifndef NETWORKFS_NETWORKFS_CORE_H
+#define NETWORKFS_NETWORKFS_CORE_H
+
+#define MODULE_NAME "networkfs"
+
+#endif
