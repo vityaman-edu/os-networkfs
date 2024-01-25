@@ -1,5 +1,6 @@
 #include "linufs.h"
 #include "log.h"
+#include <linux/slab.h>
 
 #define LINUFS_INODE_NUMBER_ROOT 1000
 #define LINUFS_INODE_NUMBER_INVALID 0
