@@ -50,6 +50,8 @@ int nfs_create_directory(
     umode_t mode
 );
 
+int nfs_remove(struct inode* parent_inode, struct dentry* child_dentry);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
@@ -59,9 +61,9 @@ struct file_system_type nfs_fs_type = {
 struct inode_operations nfs_inode_ops = {
     .lookup = nfs_lookup,
     .create = nfs_create_file,
-    .unlink = networkfs_remove,
+    .unlink = nfs_remove,
     .mkdir = nfs_create_directory,
-    .rmdir = networkfs_remove,
+    .rmdir = nfs_remove,
 };
 
 struct file_operations nfs_dir_ops = {
@@ -237,8 +239,7 @@ int nfs_create_directory(
   return nfs_create(parent_inode, child_dentry, DT_DIR);
 }
 
-static int
-networkfs_remove(struct inode* parent_inode, struct dentry* child_dentry) {
+int nfs_remove(struct inode* parent_inode, struct dentry* child_dentry) {
   const INodeNumber directory = (int)parent_inode->i_ino;
   const char* name = child_dentry->d_name.name;
 
