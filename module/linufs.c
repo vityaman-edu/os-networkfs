@@ -10,6 +10,18 @@
 static INodeNumber linufs_inode_number_next = LINUFS_INODE_NUMBER_MIN;
 static INode linufs_inodes[LINUFS_INODE_NUMBER_MAX + 1] = {0};
 
+void string_initialize(String* this, size_t capacity) {
+  this->length = 0;
+  this->capacity = capacity;
+  this->chars[this->length] = '\0';
+}
+
+void string_free(String* this) {
+  this->length = 0;
+  this->capacity = 0;
+  this->chars[this->length] = '\0';
+}
+
 void linufs_initialize(void) {
   log_info("linufs: initializing...");
   linufs_create(linufs_inode_number_root(), "test.txt", REGULAR_FILE);
@@ -49,6 +61,7 @@ linufs_create(INodeNumber parent, const char* name, INodeType type) {
   inode->number = linufs_inode_number_next;
   inode->name = name;
   inode->type = type;
+  string_initialize(&inode->content, STRING_MAX_LENGTH);
   return linufs_inode_number_next++;
 }
 
@@ -64,6 +77,7 @@ Status linufs_remove(INodeNumber inode_number) {
   inode->number = LINUFS_INODE_NUMBER_INVALID;
   inode->parent = LINUFS_INODE_NUMBER_INVALID;
   inode->type = 0;
+  string_free(&inode->content);
 
   return OK;
 }
@@ -132,4 +146,76 @@ INodes linufs_list(INodeNumber directory) {
 
 void linufs_inodes_free(INodes entries) {
   linufs_memory_free(entries.items);
+}
+
+ssize_t
+linufs_read(INodeNumber inode, char* user_buffer, size_t len, loff_t* offset) {
+  if (user_buffer == NULL || offset == NULL) {
+    return -1;
+  }
+
+  log_info("read %lu chars from inode %d at offset %lld", len, inode, *offset);
+
+  const INode* linode = linufs_find(inode);
+  if (linode == NULL) {
+    return -1;
+  }
+
+  if (linode->content.length <= *offset) {
+    return 0;
+  }
+
+  const loff_t remaining = min(len, linode->content.length - *offset);
+  const loff_t uncopied = (loff_t
+  )copy_to_user(user_buffer, linode->content.chars + *offset, remaining);
+  if (uncopied != 0) {
+    log_error(
+        "copy_to_user returned %lld when remaining was %lld\n", //
+        uncopied,
+        remaining
+    );
+    return 0;
+  }
+
+  *offset += remaining - uncopied;
+  return remaining - uncopied;
+}
+
+ssize_t linufs_write(
+    INodeNumber inode, const char* user_buffer, size_t len, loff_t* offset
+) {
+  if (user_buffer == NULL || offset == NULL) {
+    return -1;
+  }
+
+  log_info("write %lu chars to inode %d at offset %lld", len, inode, *offset);
+
+  INode* linode = linufs_find(inode);
+  if (linode == NULL) {
+    return -1;
+  }
+
+  if (linode->content.capacity <= *offset) {
+    return 0;
+  }
+
+  const loff_t remaining = min(len, linode->content.capacity - *offset);
+  const loff_t uncopied = (loff_t
+  )copy_from_user((linode->content.chars + *offset), user_buffer, remaining);
+  if (uncopied != 0) {
+    log_error(
+        "copy_from_user returned %lld when remaining was %lld\n", //
+        uncopied,
+        remaining
+    );
+    return 0;
+  }
+
+  linode->content.length = *offset + remaining;
+  linode->content.chars[linode->content.length] = '\0';
+
+  log_info("Written");
+
+  *offset += remaining;
+  return remaining;
 }

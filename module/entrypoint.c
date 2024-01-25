@@ -52,6 +52,11 @@ int nfs_create_directory(
 
 int nfs_remove(struct inode* parent_inode, struct dentry* child_dentry);
 
+ssize_t nfs_read(struct file* filp, char* buffer, size_t len, loff_t* offset);
+
+ssize_t
+nfs_write(struct file* filp, const char* buffer, size_t len, loff_t* offset);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
@@ -68,6 +73,8 @@ struct inode_operations nfs_inode_ops = {
 
 struct file_operations nfs_dir_ops = {
     .iterate = nfs_iterate,
+    .read = nfs_read,
+    .write = nfs_write,
 };
 
 struct dentry* nfs_mount(
@@ -259,6 +266,17 @@ int nfs_remove(struct inode* parent_inode, struct dentry* child_dentry) {
 
   log_info("Removed");
   return 0;
+}
+
+ssize_t nfs_read(struct file* filp, char* buffer, size_t len, loff_t* offset) {
+  const INodeNumber inode = (INodeNumber)filp->f_path.dentry->d_inode->i_ino;
+  return linufs_read(inode, buffer, len, offset);
+}
+
+ssize_t
+nfs_write(struct file* filp, const char* buffer, size_t len, loff_t* offset) {
+  const INodeNumber inode = (INodeNumber)filp->f_path.dentry->d_inode->i_ino;
+  return linufs_write(inode, buffer, len, offset);
 }
 
 static int __init nfs_init(void) {
