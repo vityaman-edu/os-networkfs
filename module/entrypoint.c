@@ -252,13 +252,13 @@ int nfs_remove(struct inode* parent_inode, struct dentry* child_dentry) {
 
   log_info("Removing inode with name %s in %d", name, directory);
 
-  INode* inode = linufs_lookup(directory, name);
-  if (inode == NULL) {
-    log_error("INode not found");
-    return -1;
-  }
+  // INode* inode = linufs_lookup(directory, name);
+  // if (inode == NULL) {
+  //   log_error("INode not found");
+  //   return -1;
+  // }
 
-  const Status status = linufs_remove(inode->number);
+  const Status status = linufs_remove(directory, name);
   if (status != OK) {
     log_error("Removal failed");
     return -1;

@@ -51,7 +51,7 @@ INodeNumber linufs_inode_number_root(void);
 INodeNumber linufs_create(INodeNumber parent, const char* name, INodeType type);
 
 /// Removes an inode.
-Status linufs_remove(INodeNumber inode_number);
+Status linufs_remove(INodeNumber directory, const char* name);
 
 /// Tries to find an inode with th given name in the directory.
 INode* linufs_lookup(INodeNumber directory, const char* name);
