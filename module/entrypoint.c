@@ -35,6 +35,21 @@ struct dentry* nfs_lookup(
 
 int nfs_iterate(struct file* filp, struct dir_context* ctx);
 
+int nfs_create_file(
+    struct user_namespace* ns,
+    struct inode* parent_inode,
+    struct dentry* child_dentry,
+    umode_t mode,
+    bool b
+);
+
+int nfs_create_directory(
+    struct user_namespace* ns,
+    struct inode* parent_inode,
+    struct dentry* child_dentry,
+    umode_t mode
+);
+
 struct file_system_type nfs_fs_type = {
     .name = MODULE_NAME,
     .mount = nfs_mount,
@@ -43,6 +58,8 @@ struct file_system_type nfs_fs_type = {
 
 struct inode_operations nfs_inode_ops = {
     .lookup = nfs_lookup,
+    .create = nfs_create_file,
+    .mkdir = nfs_create_directory,
 };
 
 struct file_operations nfs_dir_ops = {
@@ -170,6 +187,52 @@ int nfs_iterate(struct file* filp, struct dir_context* ctx) {
 
   log_error("iterate count is %lld", ctx->pos - filp->f_pos);
   return (int)(ctx->pos - filp->f_pos);
+}
+
+static int nfs_create(
+    struct inode* parent_inode, struct dentry* child_dentry, INodeType type
+) {
+  if (type != DT_REG && type != DT_DIR) {
+    log_error(
+        "Failed to create inode with type %d, "
+        "as only directory and file are supported",
+        type
+    );
+    return -1;
+  }
+
+  const INodeNumber directory = (int)parent_inode->i_ino;
+  const char* name = child_dentry->d_name.name;
+  const char* type_str = (type == DT_DIR) ? "directory" : "file";
+
+  log_info("Creating %s with name %s in %d", type_str, name, directory);
+
+  const INodeNumber linode_number = linufs_create(directory, name, type);
+
+  const umode_t mode = (type == DT_REG ? S_IFREG : S_IFDIR);
+  struct inode* inode
+      = nfs_get_inode(parent_inode->i_sb, NULL, mode, linode_number);
+  d_add(child_dentry, inode);
+  return 0;
+}
+
+int nfs_create_file(
+    struct user_namespace* ns,
+    struct inode* parent_inode,
+    struct dentry* child_dentry,
+    umode_t mode,
+    bool b
+) {
+  return nfs_create(parent_inode, child_dentry, DT_REG);
+}
+
+int nfs_create_directory(
+    struct user_namespace* ns,
+    struct inode* parent_inode,
+    struct dentry* child_dentry,
+    umode_t mode
+) {
+  return nfs_create(parent_inode, child_dentry, DT_DIR);
 }
 
 static int __init nfs_init(void) {
