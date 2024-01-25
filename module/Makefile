@@ -1,5 +1,5 @@
 obj-m += networkfs.o
-networkfs-objs += entrypoint.o linufs_web.o
+networkfs-objs += entrypoint.o linufs_web.o http.o
 ccflags-y := -std=gnu11 -g -Wall -Wno-declaration-after-statement
 
 PWD := $(CURDIR)
