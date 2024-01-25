@@ -161,8 +161,11 @@ INode* linufs_lookup(INodeNumber directory, const char* name) {
   }
 
   INode* inode = linufs_memory_allocate(sizeof(INode));
+  inode->parent = LINUFS_INODE_NUMBER_INVALID;
   inode->number = response.ino;
   inode->type = response.type;
+  inode->name = "";
+  string_initialize(&inode->content, 0);
   return inode;
 }
 
@@ -192,9 +195,11 @@ INodes linufs_list(INodeNumber directory) {
 
   for (int32_t i = 0; i < response.count; i++) {
     inodes.items[i] = linufs_memory_allocate(sizeof(INode));
+    inodes.items[i]->parent = LINUFS_INODE_NUMBER_INVALID;
     inodes.items[i]->name = response.entries[i].name;
     inodes.items[i]->number = response.entries[i].ino;
     inodes.items[i]->type = response.entries[i].type;
+    string_initialize(&inodes.items[i]->content, 0);
   }
 
   return inodes;
