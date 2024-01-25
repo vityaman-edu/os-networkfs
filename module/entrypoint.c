@@ -1,6 +1,5 @@
 #include "linufs.h"
 #include "log.h"
-#include "src/log.h"
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
