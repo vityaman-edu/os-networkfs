@@ -2,7 +2,7 @@ networkfs-objs += linufs.o
 obj-m += networkfs.o
 ccflags-y := -std=gnu11 -g -Wall -Wno-declaration-after-statement
 
-PWD := $(CURDIR)/src
+PWD := $(CURDIR)
 KDIR = /lib/modules/`uname -r`/build
 
 all:
