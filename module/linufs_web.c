@@ -188,9 +188,10 @@ INodes linufs_list(INodeNumber directory) {
 
   INodes inodes;
   inodes.count = response.count;
-  inodes.items = linufs_memory_allocate(sizeof(INode) * inodes.count);
+  inodes.items = linufs_memory_allocate(sizeof(INode*) * inodes.count);
 
   for (int32_t i = 0; i < response.count; i++) {
+    inodes.items[i] = linufs_memory_allocate(sizeof(INode));
     inodes.items[i]->name = response.entries[i].name;
     inodes.items[i]->number = response.entries[i].ino;
     inodes.items[i]->type = response.entries[i].type;
@@ -201,6 +202,9 @@ INodes linufs_list(INodeNumber directory) {
 
 /// Disposes `DirectoryEntries` array.
 void linufs_inodes_free(INodes entries) {
+  for (int32_t i = 0; i < entries.count; i++) {
+    linufs_memory_free(entries.items[i]);
+  }
   linufs_memory_free(entries.items);
 }
 
